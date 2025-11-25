@@ -1,30 +1,23 @@
+import { createClient } from "@/lib/supabase/server"
+import HubClient from "./hub-client"
+
 export default async function Hub() {
+    const supabase = await createClient()
 
+    const { data: { user } } = await supabase.auth.getUser()
+    console.log(user)
+    if (!user) {
+        return <div>Not authorized</div>
+    }
+
+    const { data } = await supabase
+        .from('checkliste')
+        .select()
+        .eq('user_id', user.id)
+        
     return(
-        <div id="hub-wrapper">
-            <div id="hub-header">
-            <h1>Meine Checklisten</h1>
-            <div>
-                { //loop through data 
-                }
-            </div>
-            <div id="header-buttons">
-                <button id="new-checklist-btn">+ Neue Checkliste</button>
-                <button id="logout-btn">Abmelden</button>
-            </div>
-            </div>
-
-            <div id="create-checklist-modal">
-            <div id="create-checklist-content">
-                <input type="text" id="checklist-title" placeholder="Checklisten-Titel" required></input>
-                <button id="create-title-btn">Erstellen</button>
-                <button id="cancel-btn">Abbrechen</button>
-            </div>
-            </div>
-
-            <div id="checklists-container">
-            <div id="checklists-grid"></div>
-            </div>
+        <div>
+            <HubClient myData={ data } /> 
         </div>
     )
 }
