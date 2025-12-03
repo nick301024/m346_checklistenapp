@@ -1,7 +1,10 @@
 'use client'
 
-import { updateList, createList, removeList } from './actions.js';
+import { updateList, createList, removeList, getData } from './actions.js';
 import { useState, useRef, useEffect } from 'react';
+import { useForm } from "react-hook-form"
+
+  
 
 export default function HubClient(myData) {
     if (!myData) {
@@ -9,6 +12,12 @@ export default function HubClient(myData) {
     }
     const [data, setData] = useState(myData.myData);
     const indexRef = useRef(0);
+	const {
+		register,
+    	handleSubmit,
+		reset,
+    	formState: { errors },
+ 	} = useForm()
 
     useEffect(() => {
         updateList(data[indexRef.current]);
@@ -38,8 +47,12 @@ export default function HubClient(myData) {
         })
     }
 
-    function CreateChecklist(list) {
-        createList(list);
+    async function CreateChecklist(data) 
+	{
+		await createList(data);
+		const newData = await getData();
+		setData(newData);
+		reset();
     }
 
     function DeleteChecklist(id) {
@@ -48,9 +61,27 @@ export default function HubClient(myData) {
 
     return (
         <div id="hub-wrapper">
+			<div>
+				<form 
+					onSubmit={ handleSubmit(CreateChecklist) }
+					className='flex flex-col m-3 p-4 bg-blue-200 text-black'>  
+                    <label>
+                        <input type="text" name="titel" placeholder="Titel" {...register("titel", { required: true })} />
+					</label>
+					<label>
+                        <input type="text" name="beschreibung" placeholder="Beschreibung" {...register("beschreibung", { required: true })} />           
+					</label>
+					<label>
+						isPublic:
+						<input type='checkbox' {...register("isPublic")}/>
+					</label>
+                	<button>Submit</button>                 
+                </form>
+			</div>
             <div id="hub-header">
                 <h1>Meine Checklisten</h1>
                 <div className="p-4 bg-green-200 text-black">
+                
                 {
                     data.map((checklist, index) => (
                         <div key={ index }>
