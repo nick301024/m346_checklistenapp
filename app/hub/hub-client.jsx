@@ -10,8 +10,8 @@ export default function HubClient(myData) {
     if (!myData) {
         return <div>Laden...</div>;
     }
-    const [data, setData] = useState(myData.myData);
-    const indexRef = useRef(0);
+    const [listData, setData] = useState(myData.myData);
+    const indexRef = useRef(-1);
 	const {
 		register,
     	handleSubmit,
@@ -20,29 +20,39 @@ export default function HubClient(myData) {
  	} = useForm()
 
     useEffect(() => {
-        updateList(data[indexRef.current]);
+		if (indexRef.current >= 0)
+        	updateList(listData[indexRef.current]);
     }, [indexRef.current]);
     
-    function changeEntry(entryIndex, entryName) {
-        indexRef.current = entryIndex;
+    function changeEntry(listIndex, entryName) {
+        indexRef.current = listIndex;
 		setData(prev => {
 			const newData = [...prev]
-            const newEntries = { ...newData[entryIndex].entries };
+            const newEntries = { ...newData[listIndex].entries };
             newEntries[entryName] = !newEntries[entryName];
             const updatedItem = {
-                ...newData[entryIndex],
+                ...newData[listIndex],
                 entries: newEntries
             }
-            newData[entryIndex] = updatedItem;
+            newData[listIndex] = updatedItem;
 			return newData;
 		})
 	}
 
-    function EditChecklist(listIndex, updatedEntry) {
+	function addEntry(e, index) {
+		e.preventDefault();
+		console.log();
+		let checklist = listData[index];
+		const entryName = e.target.eintrag.value;
+		checklist.entries[entryName] = false;
+		EditChecklist(index, checklist);
+	}
+
+    function EditChecklist(listIndex, updatedList) {
         indexRef.current = listIndex;
         setData(prev => {
             const newData = [...prev];
-            newData[listIndex] = updatedEntry;
+            newData[listIndex] = updatedList;
             return newData;
         })
     }
@@ -57,6 +67,9 @@ export default function HubClient(myData) {
 
     function DeleteChecklist(id) {
         removeList(id)
+		setData(prev => {
+			return prev.filter(item => item.id !== id);
+		})
     }
 
     return (
@@ -83,13 +96,13 @@ export default function HubClient(myData) {
                 <div className="p-4 bg-green-200 text-black">
                 
                 {
-                    data.map((checklist, index) => (
-                        <div key={ index }>
+                    listData.map((checklist, index) => (
+                        <div className="m-4 bg-red-400 text-black" key={ index }>
                             <h2>{ checklist.titel }</h2>
                             <p>{ checklist.beschreibung }</p>
-                            <button>Edit</button>
-                                { Object.entries(checklist.entries).map(([entryName, checked]) => (
-                                    <label key={ entryName }>
+							<div>
+								{ Object.entries(checklist.entries).map(([entryName, checked], entryIndex) => (
+                                    <label key={ entryIndex }>
                                         <input
                                             type="checkbox"
                                             onChange={ () => changeEntry(index, entryName) }
@@ -97,6 +110,13 @@ export default function HubClient(myData) {
                                             { entryName }
                                     </label>
                                 )) }
+								<form onSubmit={ (e) => addEntry(e, index) }>
+									<input type="text" name="eintrag" placeholder='+ Eintrag' />
+									<button>+</button>
+								</form>
+							</div>
+							<button onClick={() => DeleteChecklist(checklist.id)}>Delete</button>
+                                
                         </div>
                     ))
 			    }

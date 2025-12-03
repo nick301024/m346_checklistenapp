@@ -22,6 +22,7 @@ export default async function Home() {
         .from('checkliste')
         .select()
         .eq('user_id', user.id)
+		    .order('created_at', { ascending: false });
 
   return (
     <main className="min-h-screen flex flex-col items-center">
