@@ -7,9 +7,23 @@ import { ConnectSupabaseSteps } from "@/components/tutorial/connect-supabase-ste
 import { SignUpUserSteps } from "@/components/tutorial/sign-up-user-steps";
 import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
-import Hub from "./hub/hub";
+import { createClient } from "@/lib/supabase/server";
+import HubClient from "./hub/hub-client";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        return <div>Not authorized</div>
+    }
+
+    const { data } = await supabase
+        .from('checkliste')
+        .select()
+        .eq('user_id', user.id)
+		    .order('created_at', { ascending: false });
+
   return (
     <main className="min-h-screen flex flex-col items-center">
       <div className="flex-1 w-full flex flex-col gap-20 items-center">
@@ -21,7 +35,7 @@ export default function Home() {
             </div>
           </nav>
           <main >
-            <Hub />
+            <HubClient myData={ data } /> 
           </main>
         </div>
       </div>
